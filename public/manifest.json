@@ -1,0 +1,6 @@
+{
+  "name": "Lotto Admin",
+  "short_name": "Lotto Admin",
+  "start_url": ".",
+  "display": "standalone"
+}

@@ -1,0 +1,154 @@
+import $Moment from "@/utils/Moment.js";
+import $Numeral from "@/utils/Numeral.js";
+import { getOrderStatusStyleByKey } from "@/utils/OrderStatusFormatter.js";
+import { profitClass } from "./Formatter";
+
+const columnDefs = [
+  {
+    headerName: "#",
+    field: "no",
+    width: 100,
+    sortable: false,
+    valueFormatter: params => {
+      if (params.data) {
+        if (isNaN(params.value)) {
+          return params.value;
+        } else {
+          return $Numeral(params.value).format("0,0");
+        }
+      }
+      return null;
+    },
+    suppressMenu: true
+  },
+  {
+    headerName: "created_at",
+    field: "createdAt",
+    width: 150,
+    suppressMenu: true,
+    valueFormatter: params => $Moment(params.value).format("DD/MM HH:mm:ss"),
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "order_no",
+    field: "billNo",
+    width: 160,
+    suppressMenu: true,
+    cellRendererFramework: "BillNo",
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "status",
+    field: "status",
+    width: 160,
+    suppressMenu: true,
+    cellStyle: params => getOrderStatusStyleByKey(params.value),
+    cellRendererFramework: "OrderStatus",
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "parent_member",
+    field: "parentUsername",
+    width: 125,
+    suppressMenu: true,
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    cellRendererFramework: "PlayerParentId",
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "product2",
+    field: "productLottoName",
+    width: 150,
+    suppressMenu: true,
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "product2",
+    field: "productLottoThaiName",
+    width: 150,
+    suppressMenu: true,
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "items",
+    field: "totalOrderItems",
+    width: 100,
+    filter: "agNumberColumnFilter",
+    cellStyle: {
+      display: "flex",
+      "justify-content": "flex-end"
+    },
+    suppressMenu: true,
+    valueFormatter: params => $Numeral(params.value).format("0,0"),
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "bet_amount",
+    field: "totalAmount",
+    width: 125,
+    filter: "agNumberColumnFilter",
+    cellStyle: {
+      display: "flex",
+      "justify-content": "flex-end"
+    },
+    suppressMenu: true,
+    valueFormatter: params => $Numeral(params.value).format("0,0.00"),
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "Affliate",
+    field: "totalDiscount",
+    width: 125,
+    filter: "agNumberColumnFilter",
+    cellStyle: {
+      display: "flex",
+      "justify-content": "flex-end"
+    },
+    suppressMenu: true,
+    valueFormatter: params => $Numeral(params.value).format("0,0.00"),
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "prize",
+    field: "totalReward",
+    width: 125,
+    filter: "agNumberColumnFilter",
+    cellClass: profitClass,
+    cellStyle: {
+      display: "flex",
+      "justify-content": "flex-end"
+    },
+    suppressMenu: true,
+    valueFormatter: params => $Numeral(params.value).format("0,0.00"),
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "net_amount",
+    field: "totalProfit",
+    width: 125,
+    filter: "agNumberColumnFilter",
+    cellClass: profitClass,
+    cellStyle: {
+      display: "flex",
+      "justify-content": "flex-end"
+    },
+    suppressMenu: true,
+    valueFormatter: params => $Numeral(params.value).format("0,0.00"),
+    headerComponentFramework: "AgGridHeaderI18n"
+  },
+  {
+    headerName: "ip_address",
+    field: "ipAddress",
+    width: 160,
+    suppressMenu: true,
+    pinnedRowCellRenderer: "blankPinnedRowCellRenderer",
+    headerComponentFramework: "AgGridHeaderI18n"
+  }
+];
+
+export { columnDefs };
