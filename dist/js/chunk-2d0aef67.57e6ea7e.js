@@ -1,0 +1,1 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-2d0aef67"],{"0bfe":function(n,o,p){n.exports=p.p+"img/uob.1d0b6d45.svg"}}]);

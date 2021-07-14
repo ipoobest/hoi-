@@ -1,517 +1,533 @@
 <template>
   <v-navigation-drawer
-    id="core-navigation-drawer"
-    v-model="drawer"
-    :dark="barColor !== 'rgba(228, 226, 226, 1), rgba(255, 255, 255, 0.7)'"
-    :expand-on-hover="expandOnHover"
-    :right="$vuetify.rtl"
-    :src="barImage"
-    mobile-breakpoint="960"
     app
-    width="310"
-    v-bind="$attrs"
+    clipped
+    v-model="DRAWER_STATE"
+    :mini-variant="!DRAWER_STATE"
+    :width="sidebarWidth"
+    :permanent="$vuetify.breakpoint.lgAndUp"
+    :temporary="$vuetify.breakpoint.mdAndDown"
+    :mini-variant-width="sidebarMinWidth"
+    :class="{ 'drawer-mini': !DRAWER_STATE }"
   >
-    <template v-slot:img="props">
-      <v-img :gradient="`to bottom, ${barColor}`" v-bind="props" />
-    </template>
-
-    <v-divider class="mb-1" />
-
-    <v-list class="ma-0 pb-0" nav>
-      <v-list-item>
-        <v-list-item-avatar class="align-self-center" contain>
-          <v-img
-            :src="require(`@/assets/logo-${customerNo}.png`)"
-            max-height="40"
-          />
-        </v-list-item-avatar>
-
-        <v-list-item-content>
-          <v-list-item-title
-            class="display-2"
-            style="text-transform: capitalize; font-weight: bold"
-            v-text="profile.title"
-          />
-        </v-list-item-content>
-      </v-list-item>
-    </v-list>
-    <v-list class="ma-0 pt-0" nav>
-      <v-list-item>
-        <v-list-item-content>
-          <v-list-item-title class="subtitle-2">
-            {{ $t("welcome_admin", [me.username]) }}
-          </v-list-item-title>
-        </v-list-item-content>
-        <v-list-item-action>
-          <v-list-item-title class="body-2 text-right">{{
-            $t(me.role.name.toLowerCase().split(" ").join("_"))
-          }}</v-list-item-title>
-        </v-list-item-action>
-      </v-list-item>
-    </v-list>
-
-    <v-divider class="mb-2" />
-
-    <v-list expand nav>
-      <!-- Style cascading bug  -->
-      <!-- https://github.com/vuetifyjs/vuetify/pull/8574 -->
-      <div />
-
-      <template v-for="(item, i) in computedItems">
-        <base-item-group
-          v-if="item.children && !item.hidden"
-          :key="`group-${i}`"
-          :item="item"
-          :number="i"
+    <v-list>
+      <template v-for="(item, i) in items">
+        <v-row v-if="item.heading" :key="item.heading" align="center">
+          <v-col cols="6">
+            <span
+              style="padding-left: 32px"
+              class="text-body-1 subheader"
+              :class="item.heading && DRAWER_STATE ? 'show ' : 'hide'"
+            >
+              {{ item.heading }}
+            </span>
+          </v-col>
+          <v-col cols="6" class="text-center"> </v-col>
+        </v-row>
+        <v-divider
+          v-else-if="item.divider"
+          :key="i"
+          dark
+          class="my-4"
+        ></v-divider>
+        <v-list-group
+          color="primary"
+          v-else-if="item.children && DRAWER_STATE"
+          :key="item.title"
+          v-model="item.model"
         >
-          <!--  -->
-        </base-item-group>
+          <template v-slot:prependIcon>
+            <v-icon size="24" class="mr-0" color="greyTint">
+              {{ item.icon }}
+            </v-icon>
+          </template>
+          <template v-slot:activator>
+            <v-list-item-content>
+              <v-badge v-if="item.badge" content="New" color="secondary">
+              </v-badge>
+              <v-list-item-title>
+                {{ item.title }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </template>
 
-        <base-item v-else-if="!item.hidden" :key="`item-${i}`" :item="item" />
+          <v-list-item
+            v-for="(child, i) in item.children"
+            :key="i"
+            :to="child.link"
+            link
+            class="pl-12"
+            @click="child.action ? child.action() : null"
+          >
+            <v-list-item-action class="mr-2" v-if="child.icon">
+              <v-icon size="">{{ child.icon }}</v-icon>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ child.title }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </v-list-group>
+        <v-list-item
+          color="primary"
+          v-else
+          :key="item.text"
+          :to="item.link === '#' ? '' : item.link"
+          @click="item.action ? item.action() : null"
+          link
+        >
+          <v-list-item-action class="mr-6">
+            <v-icon
+              :size="item.size ? item.size : 24"
+              :color="item.color ? item.color : 'greyTint'"
+              >{{ item.icon }}</v-icon
+            >
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title link>
+              {{ item.title }}
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </template>
-
-      <!-- Style cascading bug  -->
-      <!-- https://github.com/vuetifyjs/vuetify/pull/8574 -->
-      <div />
+      <v-divider dark style="margin-top: 240px"></v-divider>
+      <v-list-item color="primary" link @click="chat = true">
+        <v-list-item-action class="mr-6">
+          <v-responsive
+            class="
+              text-center
+              primary
+              rounded-pill
+              d-inline-flex
+              align-center
+              justify-center
+              my-2
+            "
+            height="44"
+            width="44"
+            max-width="200%"
+          >
+            <v-icon size="24" color="white">mdi-message-text</v-icon>
+          </v-responsive>
+        </v-list-item-action>
+        <v-list-item-content>
+          <v-list-item-title link> Chat </v-list-item-title>
+        </v-list-item-content>
+      </v-list-item>
     </v-list>
+    <v-dialog
+      v-model="dialog"
+      hide-overlay
+      content-class="add-section"
+      max-width="230"
+    >
+      <v-card class="primary pt-5">
+        <v-card-text>
+          <p class="text-h6 white--text">Add section</p>
+          <v-text-field
+            class="white--text"
+            dark
+            single-line
+            label="Section name"
+          ></v-text-field>
+          <v-row no-gutters justify="end">
+            <v-btn
+              color="secondary"
+              class="elevation-0 mr-2"
+              @click="dialog = false"
+            >
+              Add
+            </v-btn>
+            <v-btn text class="white--text" @click="dialog = false">
+              Agree
+            </v-btn>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+    <v-dialog v-model="chat" content-class="sidebar-chat" max-width="440">
+      <v-card class="pt-5">
+        <v-card-text>
+          <p class="fs-large font-weight-medium greyBold--text mb-0">Chat</p>
+          <v-list two-line>
+            <template v-for="(item, i) in chatItems">
+              <v-list-item class="px-0" style="min-height: 55px" :key="i">
+                <v-list-item-avatar class="my-0">
+                  <v-img :src="item.avatar"></v-img>
+                </v-list-item-avatar>
 
-    <!-- <template v-slot:append>
-      <base-item
-        :item="{
-          title: $t('upgrade'),
-          icon: 'mdi-package-up',
-          to: '/upgrade'
-        }"
-      />
-    </template> -->
+                <v-list-item-content class="py-0">
+                  <v-list-item-title
+                    class="font-weight-bold greyBold--text"
+                    v-html="item.title"
+                  ></v-list-item-title>
+                  <v-list-item-subtitle
+                    class="greyBold--text fs-base"
+                    v-html="item.subtitle"
+                  ></v-list-item-subtitle>
+                </v-list-item-content>
+              </v-list-item>
+            </template>
+          </v-list>
+          <v-row no-gutters>
+            <v-text-field
+              v-model="chatMessage"
+              single-line
+              hide-details
+              class="pt-0 mr-2"
+              label="Type a message"
+            ></v-text-field>
+            <v-btn
+              color="primary"
+              class="elevation-0 text-capitalize"
+              @click="newMessage"
+            >
+              Send
+            </v-btn>
+          </v-row>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-navigation-drawer>
 </template>
 
 <script>
-import { sync, get } from "vuex-pathify";
+import { mapActions, mapState } from "vuex";
 
 export default {
-  name: "DashboardCoreDrawer",
   props: {
-    expandOnHover: {
-      type: Boolean,
-      default: false
-    }
+    source: String
   },
-  data: () => ({
-    appName: process.env.VUE_APP_NAME,
-    customerNo: process.env.VUE_APP_CUSTOMER_NO,
-    items: []
-  }),
+  data() {
+    return {
+      items: [
+        { title: "Profile", icon: "mdi-account-circle", link: "/user/profile" },
+        { title: "Dashboard", icon: "mdi-home", link: "/dashboard" },
+        {
+          title: "E-commerce",
+          icon: "mdi-cart",
+          model: false,
+          children: [
+            {
+              title: "Product Management",
+              icon: "mdi-circle-small",
+              link: "/e-commerce/management"
+            },
+            {
+              title: "Product Grid",
+              icon: "mdi-circle-small",
+              link: "/e-commerce/grid"
+            },
+            {
+              title: "Product Page",
+              icon: "mdi-circle-small",
+              link: "/e-commerce/detail"
+            }
+          ]
+        },
+        {
+          title: "User",
+          icon: "mdi-account",
+          model: false,
+          badge: true,
+          children: [
+            {
+              title: "User List",
+              icon: "mdi-circle-small",
+              link: "/user/list"
+            },
+            { title: "User Add", icon: "mdi-circle-small", link: "/user/add" },
+            { title: "User Edit", icon: "mdi-circle-small", link: "/user/edit" }
+          ]
+        },
+        {
+          title: "Documentation",
+          icon: "mdi-file-document",
+          link: "/documentation"
+        },
+        { divider: true },
+        { heading: "TEMPLATE" },
+        {
+          title: "Core",
+          icon: "mdi-apps",
+          model: false,
+          children: [
+            {
+              title: "Typography",
+              icon: "mdi-circle-small",
+              link: "/core/typography"
+            },
+            { title: "Colors", icon: "mdi-circle-small", link: "/core/colors" },
+            { title: "Grid", icon: "mdi-circle-small", link: "/core/grid" }
+          ]
+        },
+        {
+          title: "Tables",
+          icon: "mdi-grid-large",
+          model: false,
+          children: [
+            {
+              title: "Tables Basic",
+              icon: "mdi-circle-small",
+              link: "/tables/basic"
+            },
+            {
+              title: "Tables Dynamic",
+              icon: "mdi-circle-small",
+              link: "/tables/dynamic"
+            }
+          ]
+        },
+        {
+          title: "UI Elements",
+          icon: "mdi-image-filter-none",
+          model: false,
+          children: [
+            { title: "Icons", icon: "mdi-circle-small", link: "/ui/icons" },
+            { title: "Badges", icon: "mdi-circle-small", link: "/ui/badges" },
+            {
+              title: "Carousel",
+              icon: "mdi-circle-small",
+              link: "/ui/carousel"
+            },
+            { title: "Cards", icon: "mdi-circle-small", link: "/ui/cards" },
+            { title: "Modal", icon: "mdi-circle-small", link: "/ui/modal" },
+            {
+              title: "Notifications",
+              icon: "mdi-circle-small",
+              link: "/ui/notifications"
+            },
+            { title: "Navbar", icon: "mdi-circle-small", link: "/ui/navbar" },
+            {
+              title: "Tooltips",
+              icon: "mdi-circle-small",
+              link: "/ui/tooltips"
+            },
+            { title: "Tabs", icon: "mdi-circle-small", link: "/ui/tabs" },
+            {
+              title: "Pagination",
+              icon: "mdi-circle-small",
+              link: "/ui/pagination"
+            },
+            {
+              title: "Progress",
+              icon: "mdi-circle-small",
+              link: "/ui/progress"
+            }
+          ]
+        },
+        {
+          title: "Forms",
+          icon: "mdi-file-document",
+          model: false,
+          children: [
+            {
+              title: "Form Elements",
+              icon: "mdi-circle-small",
+              link: "/forms/elements"
+            },
+            {
+              title: "Form Validation",
+              icon: "mdi-circle-small",
+              link: "/forms/validation"
+            }
+          ]
+        },
+        {
+          title: "Charts",
+          icon: "mdi-chart-bar",
+          model: false,
+          children: [
+            {
+              title: "Charts Overview",
+              icon: "mdi-circle-small",
+              link: "/charts/overview"
+            },
+            {
+              title: "Line Charts",
+              icon: "mdi-circle-small",
+              link: "/charts/line-charts"
+            },
+            {
+              title: "Bar Charts",
+              icon: "mdi-circle-small",
+              link: "/charts/bar-charts"
+            },
+            {
+              title: "Pie Charts",
+              icon: "mdi-circle-small",
+              link: "/charts/pie-charts"
+            }
+          ]
+        },
+        {
+          title: "Maps",
+          icon: "mdi-map",
+          model: false,
+          children: [
+            {
+              title: "Google Maps",
+              icon: "mdi-circle-small",
+              link: "/maps/google"
+            },
+            {
+              title: "Vector Maps",
+              icon: "mdi-circle-small",
+              link: "/maps/vector"
+            }
+          ]
+        },
+        {
+          title: "Extra",
+          icon: "mdi-star",
+          model: false,
+          children: [
+            {
+              title: "Calendar",
+              icon: "mdi-circle-small",
+              link: "/extra/calendar"
+            },
+            {
+              title: "Invoice",
+              icon: "mdi-circle-small",
+              link: "/extra/invoice"
+            },
+            {
+              title: "Login Page",
+              icon: "mdi-circle-small",
+              link: "#",
+              action: () => this.logOut()
+            },
+            {
+              title: "Error Page",
+              icon: "mdi-circle-small",
+              link: "/extra/error"
+            },
+            {
+              title: "Gallery",
+              icon: "mdi-circle-small",
+              link: "/extra/gallery"
+            },
+            {
+              title: "Search Result",
+              icon: "mdi-circle-small",
+              link: "/extra/search-result"
+            },
+            {
+              title: "Time Line",
+              icon: "mdi-circle-small",
+              link: "/extra/timeLine"
+            }
+          ]
+        },
+        {
+          title: "Menu Levels",
+          icon: "mdi-folder",
+          model: false,
+          children: [
+            { title: "Level 1.1", icon: "mdi-circle-small" },
+            {
+              title: "Level 1.2",
+              icon: "mdi-folder",
+              model: false,
+              children: [
+                {
+                  title: "Calendar",
+                  icon: "mdi-circle-small",
+                  link: "/extra/calendar"
+                },
+                {
+                  title: "Invoice",
+                  icon: "mdi-circle-small",
+                  link: "/extra/invoice"
+                }
+              ]
+            }
+          ]
+        },
+        { divider: true },
+        { heading: "HELP" },
+        { title: "Library", icon: "mdi-book-variant-multiple" },
+        { title: "Support", icon: "mdi-forum" },
+        { title: "FAQ", icon: "mdi-help-circle-outline" },
+        { divider: true },
+        { heading: "PROJECTS" },
+        { title: "My recent", icon: "mdi-circle-medium", color: "warning" },
+        { title: "Starred", icon: "mdi-circle-medium", color: "primaryConst" },
+        { title: "Background", icon: "mdi-circle-medium", color: "error" },
+        { divider: true },
+        {
+          title: "Add section",
+          icon: "mdi-plus-circle",
+          color: "secondary",
+          size: 36,
+          action: () => this.addSection()
+        },
+        { divider: true }
+      ],
+      chatItems: [
+        {
+          avatar: require("@/assets/img/time-line/a1.jpg"),
+          title: "Jane Hew",
+          subtitle: "<span>Hey! How it's going?</span>"
+        },
+        {
+          avatar: require("@/assets/img/time-line/a2.jpg"),
+          title: "Axel Pittman",
+          subtitle:
+            "<span class='text--primary'>I'll definitely buy this template</span>"
+        },
+        {
+          avatar: require("@/assets/img/time-line/a3.jpg"),
+          title: "Sophia Fernandez",
+          subtitle: "<span class='text--primary'>What's the font-family?</span>"
+        }
+      ],
+      sidebarWidth: 240,
+      sidebarMinWidth: 96,
+      dialog: false,
+      chat: false,
+      chatMessage: ""
+    };
+  },
   computed: {
-    barColor: sync("global/barColor"),
-    barImage: sync("global/barImage"),
-    drawer: sync("global/drawer"),
-    me: get("auth/me"),
-    computedItems() {
-      return this.items.map(this.mapItem);
-    },
-    profile() {
-      return {
-        avatar: true,
-        title: this.appName
-      };
-    }
-  },
-  created() {
-    this.items = [
-      {
-        icon: "mdi-view-dashboard",
-        title: "dashboard",
-        to: "/",
-        hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
+    ...mapState("layout", {
+      drawer: state => state.drawer
+    }),
+    DRAWER_STATE: {
+      get() {
+        return this.drawer;
       },
-      {
-        title: "transaction",
-        icon: "mdi-bank-transfer",
-        group: "/transaction",
-
-        children: [
-          {
-            title: "instant-transaction",
-            to: "instant"
-          },
-          {
-            title: "all-transaction",
-            to: "all"
-          },
-          {
-            title: "transaction_actions",
-            to: "actions"
-          },
-          // {
-          //   title: "promotion-transaction",
-          //   to: "promotion",
-          //
-          // },
-          {
-            title: "reject-reason",
-            to: "reject"
-          }
-        ]
-      },
-      {
-        title: "member",
-        icon: "mdi-account",
-        group: "/member",
-
-        children: [
-          {
-            title: "user-bank-account",
-            to: "bank"
-          },
-          {
-            title: "player-list",
-            to: "player"
-          },
-          {
-            title: "new-registrant",
-            to: "new"
-          },
-          {
-            title: "online-players",
-            to: "online"
-          },
-          {
-            title: "succeed-login",
-            to: "login-succeed-logs"
-          },
-          {
-            title: "failed-login",
-            to: "login-failed-logs"
-          },
-          {
-            title: "sms_notification",
-            to: "sms",
-            hidden: ["Approver"].includes(this.me.role.name)
-          },
-          {
-            title: "sms_logs",
-            to: "sms-logs",
-            hidden: ["Approver"].includes(this.me.role.name)
-          },
-          {
-            title: "member_setting",
-            to: "setting",
-            hidden: ["Partner", "Super Admin", "Approver"].includes(
-              this.me.role.name
-            )
-          }
-          // {
-          //   title: "group-level",
-          //   to: "group",
-          //
-          // },
-          // {
-          //   title: "tag-management",
-          //   to: "tag",
-          //
-          // }
-        ]
-      },
-      {
-        title: "product",
-        icon: "mdi-gamepad-variant",
-        hidden: ["Super Admin", "Approver"].includes(this.me.role.name),
-        group: "/product",
-
-        children: [
-          {
-            title: "lotto",
-            to: "lotto"
-          },
-          // {
-          //   title: "casino",
-          //   to: "casino",
-          //
-          // },
-          {
-            title: "game",
-            to: "game"
-          },
-          // {
-          //   title: "sport",
-          //   to: "sport",
-          //
-          // },
-          {
-            title: "products-maintenance",
-            to: "maintenance",
-            hidden: ["Partner", "Super Admin", "Approver"].includes(
-              this.me.role.name
-            )
-          }
-        ]
-      },
-      {
-        title: "total-bet",
-        icon: "mdi-cash-multiple",
-        group: "/total",
-
-        hidden: ["Super Admin", "Approver"].includes(this.me.role.name),
-        children: [
-          {
-            title: "outstanding",
-            to: "outstanding",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          }
-        ]
-      },
-      {
-        title: "report",
-        icon: "mdi-file-table",
-        group: "/report",
-
-        hidden: ["Super Admin", "Approver"].includes(this.me.role.name),
-        children: [
-          {
-            title: "winloss_report",
-            to: "winlose",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          },
-          // {
-          //   title: "winloss",
-          //   to: "winloss"
-          // },
-          // {
-          //   title: "profit-loss-report",
-          //   to: "profit-loss"
-          // },
-          {
-            title: "overall-report",
-            to: "overall",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          },
-          {
-            title: "player-report",
-            to: "player",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          }
-        ]
-      },
-      {
-        title: "finance",
-        icon: "mdi-bank",
-        group: "/finance",
-        children: [
-          {
-            title: "company-bank-account",
-            to: "company",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          },
-          // {
-          //   title: "bank-summary",
-          //   to: "summary",
-          //   hidden: ["Approver"].includes(this.me.role.name),
-          //
-          // },
-          {
-            title: "bank_transactions",
-            to: "transactions"
-          },
-          {
-            title: "bank-list",
-            to: "list",
-            hidden: ["Partner", "Super Admin", "Approver"].includes(
-              this.me.role.name
-            )
-          },
-          {
-            title: "bank-filter",
-            to: "filter",
-            hidden: ["Partner", "Super Admin", "Approver"].includes(
-              this.me.role.name
-            )
-          }
-        ]
-      },
-      {
-        title: "admin",
-        icon: "mdi-briefcase-account",
-        group: "/admin",
-
-        hidden: ["Super Admin", "Approver"].includes(this.me.role.name),
-        children: [
-          {
-            title: "admin-list",
-            to: "list",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          },
-          // {
-          //   title: "role-permission",
-          //   to: "permission"
-          // },
-          {
-            title: "admin-logs",
-            to: "logs",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          }
-        ]
-      },
-      {
-        title: "affiliate",
-        icon: "mdi-share-variant",
-        group: "/affiliate",
-
-        hidden: ["Approver"].includes(this.me.role.name),
-        children: [
-          {
-            title: "affiliate-list",
-            to: "list",
-            hidden: ["Approver"].includes(this.me.role.name)
-          },
-          {
-            title: "affiliate-bonus-setting",
-            to: "setting",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          },
-          {
-            title: "rerrefal-bonus",
-            to: "bonus",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          },
-          {
-            title: "affiliate-statistic",
-            to: "statistic",
-            hidden: ["Super Admin", "Approver"].includes(this.me.role.name)
-          }
-        ]
+      set(newValue) {
+        if (newValue === this.drawer) return;
+        this.TOGGLE_DRAWER();
       }
-      // {
-      //   title: "website",
-      //   icon: "mdi-web",
-      //   group: "/website",
-      //   children: [
-      //     {
-      //       title: "announcement",
-      //       to: "announcement",
-      //
-      //     }
-      // {
-      //   title: "banner",
-      //   to: "banner",
-      //
-      // },
-      // {
-      //   title: "promotion-website",
-      //   to: "promotion",
-      //
-      // },
-      // {
-      //   title: "seo",
-      //   to: "seo",
-      //
-      // },
-      // {
-      //   title: "article",
-      //   to: "article",
-      //
-      // }
-      //   ]
-      // }
-      // {
-      //   title: "agent",
-      //   icon: "mdi-account-group",
-      //   group: "/agent",
-      //   children: [
-      //     {
-      //       title: "master-list",
-      //       to: "master"
-      //     },
-      //     {
-      //       title: "agent-list",
-      //       to: "agent"
-      //     },
-      //     {
-      //       title: "position-taking",
-      //       to: "position"
-      //     },
-      //     {
-      //       title: "ggr-setting",
-      //       to: "ggr"
-      //     },
-      //     {
-      //       title: "agent-report",
-      //       to: "report"
-      //     },
-      //     {
-      //       title: "transfer-payment",
-      //       to: "transfer"
-      //     }
-      //   ]
-      // }
-    ];
+    }
   },
   methods: {
-    mapItem(item) {
-      return {
-        ...item,
-        children: item.children ? item.children.map(this.mapItem) : undefined,
-        title: this.$t(item.title)
+    ...mapActions("layout", ["TOGGLE_DRAWER"]),
+    logOut: function () {
+      window.localStorage.setItem("authenticated", false);
+      this.$router.push("/login");
+    },
+    addSection: function () {
+      this.dialog = true;
+    },
+    newMessage: function () {
+      let post = {
+        avatar: require("@/assets/img/user/avatars/avatar.png"),
+        title: "John Smith",
+        subtitle: ""
       };
+      if (this.chatMessage.length !== 0) {
+        post.subtitle = this.chatMessage;
+        this.chatItems.push(post);
+        this.chatMessage = "";
+      }
     }
   }
 };
 </script>
 
-<style lang="sass">
-@import '~vuetify/src/styles/tools/_rtl.sass'
-
-#core-navigation-drawer
-  .v-list-group__header.v-list-item--active:before
-    opacity: .24
-
-  .v-list-item
-    &__icon--text,
-    &__icon:first-child
-      justify-content: center
-      text-align: center
-      width: 20px
-
-      +ltr()
-        margin-right: 24px
-        margin-left: 12px !important
-
-      +rtl()
-        margin-left: 24px
-        margin-right: 12px !important
-
-  .v-list--dense
-    .v-list-item
-      &__icon--text,
-      &__icon:first-child
-        margin-top: 10px
-
-  .v-list-group--sub-group
-    .v-list-item
-      +ltr()
-        padding-left: 8px
-
-      +rtl()
-        padding-right: 8px
-
-    .v-list-group__header
-      +ltr()
-        padding-right: 0
-
-      +rtl()
-        padding-right: 0
-
-      .v-list-item__icon--text
-        margin-top: 19px
-        order: 0
-
-      .v-list-group__header__prepend-icon
-        order: 2
-
-        +ltr()
-          margin-right: 8px
-
-        +rtl()
-          margin-left: 8px
-</style>
+<style src="./Sidebar.scss" lang="scss"/>

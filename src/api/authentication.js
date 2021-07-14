@@ -4,10 +4,14 @@ import store from "@/store";
 export const authLocalLogin = (identifier, password) => {
   return new Promise(async (resolve, reject) => {
     try {
+      console.log("identifier, password", identifier, password);
+
       const response = await axios.post("/auth/local", {
         identifier,
         password
       });
+
+      console.log("response lofgin", response);
 
       const { jwt, user } = response.data;
 
